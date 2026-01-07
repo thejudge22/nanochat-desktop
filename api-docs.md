@@ -316,3 +316,284 @@ Enhance a prompt using an LLM to make it better for generation.
   "enhanced_prompt": "string"
 }
 ```
+
+---
+
+### Conversations
+
+#### GET `/api/db/conversations`
+List all conversations for the user, or get a specific conversation by ID.
+
+**Authentication**: Session (or Public for shared conversations)
+
+**Query Parameters**:
+- `id`: (Optional) Conversation ID to fetch a specific conversation.
+- `projectId`: (Optional) Filter by project. Use `"null"` for non-project conversations.
+- `search`: (Optional) Search term for conversation search.
+- `mode`: (Optional) Search mode: `'exact'`, `'words'`, or `'fuzzy'`.
+
+**Response** (list):
+```json
+[
+  {
+    "id": "string",
+    "title": "string",
+    "userId": "string",
+    "projectId": "string | null",
+    "pinned": "boolean",
+    "generating": "boolean",
+    "costUsd": "number | null",
+    "createdAt": "date",
+    "updatedAt": "date"
+  }
+]
+```
+
+#### POST `/api/db/conversations`
+Create or update conversations.
+
+**Authentication**: Session
+
+**Request Body**:
+```json
+{
+  "action": "create" | "createWithMessage" | "branch" | "updateTitle" | "updateGenerating" | "updateCost" | "setPublic" | "togglePin",
+  // Additional fields depend on action
+}
+```
+
+**Actions**:
+- `create`: Create new conversation. Fields: `title`, `projectId`.
+- `createWithMessage`: Create conversation with first message. Fields: `content`, `contentHtml`, `role`, `images`, `webSearchEnabled`, `projectId`.
+- `branch`: Branch from existing message. Fields: `conversationId`, `fromMessageId`.
+- `updateTitle`: Update title. Fields: `conversationId`, `title`.
+- `setPublic`: Make conversation public. Fields: `conversationId`, `public`.
+- `togglePin`: Toggle pin status. Fields: `conversationId`.
+
+#### DELETE `/api/db/conversations`
+Delete a conversation or all conversations.
+
+**Authentication**: Session
+
+**Query Parameters**:
+- `id`: Conversation ID to delete.
+- `all`: Set to `"true"` to delete all conversations.
+
+---
+
+### Messages
+
+#### GET `/api/db/messages`
+Get messages for a conversation.
+
+**Authentication**: Session (or Public for public conversations)
+
+**Query Parameters**:
+- `conversationId`: (Required) Conversation ID.
+- `public`: Set to `"true"` for public conversations.
+
+**Response**:
+```json
+[
+  {
+    "id": "string",
+    "conversationId": "string",
+    "role": "user" | "assistant" | "system",
+    "content": "string",
+    "contentHtml": "string | null",
+    "modelId": "string | null",
+    "reasoning": "string | null",
+    "images": "array | null",
+    "documents": "array | null",
+    "createdAt": "date"
+  }
+]
+```
+
+#### POST `/api/db/messages`
+Create or update messages.
+
+**Authentication**: Session
+
+**Request Body**:
+```json
+{
+  "action": "create" | "updateContent" | "update" | "updateError" | "delete",
+  // Additional fields depend on action
+}
+```
+
+---
+
+### User Settings
+
+#### GET `/api/db/user-settings`
+Get user settings.
+
+**Authentication**: Session
+
+**Response**:
+```json
+{
+  "userId": "string",
+  "privacyMode": "boolean",
+  "contextMemoryEnabled": "boolean",
+  "persistentMemoryEnabled": "boolean",
+  "theme": "string | null",
+  ...
+}
+```
+
+#### POST `/api/db/user-settings`
+Update user settings.
+
+**Authentication**: Session
+
+**Request Body**:
+```json
+{
+  "action": "update",
+  "privacyMode": "boolean (optional)",
+  "contextMemoryEnabled": "boolean (optional)",
+  ...
+}
+```
+
+---
+
+### User Models
+
+#### GET `/api/db/user-models`
+Get enabled models for the user.
+
+**Authentication**: Session
+
+**Query Parameters**:
+- `provider`: (Optional) Filter by provider.
+- `modelId`: (Optional) Get specific model.
+
+**Response**:
+```json
+[
+  {
+    "modelId": "string",
+    "provider": "string",
+    "enabled": "boolean",
+    "pinned": "boolean"
+  }
+]
+```
+
+#### POST `/api/db/user-models`
+Enable/disable models or toggle pinned status.
+
+**Authentication**: Session
+
+**Request Body**:
+```json
+{
+  "action": "set" | "togglePinned" | "enableInitial",
+  "provider": "string",
+  "modelId": "string",
+  "enabled": "boolean"
+}
+```
+
+---
+
+### Model Providers
+
+#### GET `/api/model-providers`
+Get available providers for a model.
+
+**Authentication**: Session
+
+**Query Parameters**:
+- `modelId`: (Required) Model ID.
+
+**Response**:
+```json
+{
+  "canonicalId": "string",
+  "displayName": "string",
+  "supportsProviderSelection": "boolean",
+  "providers": []
+}
+```
+
+---
+
+### Assistants (Extended)
+
+#### PATCH `/api/assistants/[id]`
+Update an assistant.
+
+**Authentication**: Session
+
+**Request Body**:
+```json
+{
+  "name": "string (optional)",
+  "systemPrompt": "string (optional)",
+  "defaultModelId": "string | null (optional)",
+  "defaultWebSearchMode": "enum (optional)"
+}
+```
+
+#### DELETE `/api/assistants/[id]`
+Delete an assistant.
+
+**Authentication**: Session
+
+#### POST `/api/assistants/[id]`
+Set assistant as default.
+
+**Authentication**: Session
+
+**Request Body**:
+```json
+{
+  "action": "setDefault"
+}
+```
+
+---
+
+### Projects (Extended)
+
+#### GET `/api/projects/[id]`
+Get a single project with all details.
+
+**Authentication**: Session
+
+**Response**:
+```json
+{
+  "id": "string",
+  "name": "string",
+  "role": "owner" | "editor" | "viewer",
+  "files": [],
+  "members": [],
+  "conversations": []
+}
+```
+
+#### PATCH `/api/projects/[id]`
+Update a project.
+
+**Authentication**: Session (owner or editor)
+
+**Request Body**:
+```json
+{
+  "name": "string (optional)",
+  "description": "string (optional)",
+  "systemPrompt": "string (optional)",
+  "color": "string (optional)"
+}
+```
+
+#### DELETE `/api/projects/[id]`
+Delete a project.
+
+**Authentication**: Session (owner only)
