@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { chatStore, canSendMessage } from '../stores/chat';
+  import { modelsStore, selectedModel } from '../stores/models';
 
   export let disabled = false;
   export let placeholder = 'Type a message...';
@@ -25,8 +26,15 @@
       return;
     }
 
-    // Use a default model for now (this will be improved in Phase 6)
-    const modelId = 'gpt-4o-mini';
+    // Get the selected model from the models store
+    const model = $selectedModel;
+
+    if (!model || !model.modelId) {
+      chatStore.setError('No model selected. Please configure your models in Settings.');
+      return;
+    }
+
+    const modelId = model.modelId;
 
     messageInput = '';
     resizeTextarea();

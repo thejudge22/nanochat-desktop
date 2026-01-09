@@ -2,6 +2,7 @@
   import { onMount, onDestroy, tick } from 'svelte';
   import { chatStore } from '../stores/chat';
   import { selectedConversation } from '../stores/conversations';
+  import { modelsStore } from '../stores/models';
   import ChatMessage from './ChatMessage.svelte';
   import ChatInput from './ChatInput.svelte';
 
@@ -44,6 +45,11 @@
   }
 
   onMount(() => {
+    // Load available models
+    modelsStore.loadModels().catch(err => {
+      console.error('Failed to load models:', err);
+    });
+
     // Initialize with the selected conversation
     if ($selectedConversation?.id) {
       chatStore.setConversation($selectedConversation.id);

@@ -175,6 +175,10 @@ function createChatStore() {
             update(state => ({ ...state, error: null }));
         },
 
+        setError(message: string) {
+            update(state => ({ ...state, error: message }));
+        },
+
         reset() {
             if (pollInterval) {
                 clearInterval(pollInterval);
