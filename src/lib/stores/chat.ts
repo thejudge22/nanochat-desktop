@@ -134,23 +134,36 @@ function createChatStore() {
                 clearInterval(pollInterval);
             }
 
+            // Track message count to detect new messages
+            let previousMessageCount = 0;
+
             // Poll every 500ms
             pollInterval = setInterval(async () => {
                 try {
+                    // Reload messages to get the latest
+                    const messages = await messagesApi.getMessages(conversationId);
+
+                    // Check if new messages have arrived
+                    const hasNewMessages = messages.length > previousMessageCount;
+                    const hasAssistantResponse = messages.some(m => m.role === 'assistant' && m.createdAt > new Date(Date.now() - 10000));
+
+                    // Update message count for next poll
+                    previousMessageCount = messages.length;
+
                     // Get conversation to check generating status
                     const conversation = await conversationsApi.getConversation(conversationId);
 
-                    // Reload messages to get the latest
-                    const messages = await messagesApi.getMessages(conversationId);
+                    // Stop polling if we have an assistant response or generation is complete
+                    const generationComplete = !conversation.generating || hasAssistantResponse;
 
                     update(state => ({
                         ...state,
                         messages,
-                        generating: conversation.generating,
+                        generating: !generationComplete,
                     }));
 
                     // Stop polling when generation is complete
-                    if (!conversation.generating) {
+                    if (generationComplete) {
                         if (pollInterval) {
                             clearInterval(pollInterval);
                             pollInterval = null;
