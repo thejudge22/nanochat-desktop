@@ -134,27 +134,43 @@ function createChatStore() {
                 clearInterval(pollInterval);
             }
 
+            console.log('[Chat] Starting polling for conversation:', conversationId);
+
             // Track message count to detect new messages
             let previousMessageCount = 0;
+            let pollCount = 0;
+            const maxPolls = 120; // Maximum 60 seconds of polling (120 * 500ms)
 
             // Poll every 500ms
             pollInterval = setInterval(async () => {
+                pollCount++;
+
                 try {
                     // Reload messages to get the latest
                     const messages = await messagesApi.getMessages(conversationId);
 
+                    console.log(`[Chat] Poll #${pollCount}: Fetched ${messages.length} messages (previous: ${previousMessageCount})`);
+
                     // Check if new messages have arrived
                     const hasNewMessages = messages.length > previousMessageCount;
-                    const hasAssistantResponse = messages.some(m => m.role === 'assistant' && m.createdAt > new Date(Date.now() - 10000));
+
+                    if (hasNewMessages) {
+                        console.log('[Chat] New messages detected!');
+                    }
+
+                    // Check for assistant messages
+                    const assistantMessages = messages.filter(m => m.role === 'assistant');
+                    console.log(`[Chat] Assistant messages: ${assistantMessages.length}`);
 
                     // Update message count for next poll
                     previousMessageCount = messages.length;
 
                     // Get conversation to check generating status
                     const conversation = await conversationsApi.getConversation(conversationId);
+                    console.log(`[Chat] Conversation generating flag: ${conversation.generating}`);
 
                     // Stop polling if we have an assistant response or generation is complete
-                    const generationComplete = !conversation.generating || hasAssistantResponse;
+                    const generationComplete = !conversation.generating || assistantMessages.length > 0;
 
                     update(state => ({
                         ...state,
@@ -162,15 +178,28 @@ function createChatStore() {
                         generating: !generationComplete,
                     }));
 
+                    console.log(`[Chat] Generation complete: ${generationComplete}`);
+
                     // Stop polling when generation is complete
                     if (generationComplete) {
+                        console.log('[Chat] Stopping polling - generation complete');
                         if (pollInterval) {
                             clearInterval(pollInterval);
                             pollInterval = null;
                         }
                     }
+
+                    // Safety: stop polling after max attempts
+                    if (pollCount >= maxPolls) {
+                        console.log('[Chat] Stopping polling - max attempts reached');
+                        if (pollInterval) {
+                            clearInterval(pollInterval);
+                            pollInterval = null;
+                        }
+                        update(state => ({ ...state, generating: false }));
+                    }
                 } catch (error) {
-                    console.error('Polling error:', error);
+                    console.error('[Chat] Polling error:', error);
                     // Don't stop polling on transient errors
                 }
             }, 500);
