@@ -16,7 +16,7 @@ fn save_config(config: Config) -> Result<(), String> {
 async fn validate_connection(server_url: String, api_key: String) -> Result<bool, String> {
     // Test connection by trying to fetch conversations
     let client = reqwest::Client::new();
-    let url = format!("{}/api/conversations", server_url.trim_end_matches('/'));
+    let url = format!("{}/api/db/conversations", server_url.trim_end_matches('/'));
     
     let response = client
         .get(&url)
@@ -28,7 +28,7 @@ async fn validate_connection(server_url: String, api_key: String) -> Result<bool
     if response.status().is_success() {
         Ok(true)
     } else {
-        Err(format!("API returned error: {}", response.status()))
+        Err(format!("API returned error: {} - {}", response.status(), response.status().canonical_reason().unwrap_or("Unknown")))
     }
 }
 
