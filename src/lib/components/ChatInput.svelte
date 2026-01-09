@@ -29,12 +29,9 @@
     // Get the selected model from the models store
     const model = $selectedModel;
 
-    if (!model || !model.modelId) {
-      chatStore.setError('No model selected. Please configure your models in Settings.');
-      return;
-    }
-
-    const modelId = model.modelId;
+    // Fallback to hardcoded model if no model is available (temporary for testing)
+    // TODO: Remove this once model selection UI is implemented (Phase 6)
+    const modelId = model?.modelId || 'openai/gpt-oss-120b';
 
     messageInput = '';
     resizeTextarea();
