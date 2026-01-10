@@ -151,11 +151,16 @@ function createChatStore() {
                         messages,
                     }));
 
-                    // Stop polling if we have NEW assistant messages (count increased)
+                    // Stop polling if we have NEW assistant messages with actual content
+                    // Messages are created before content is generated, so we need to check
+                    // that the latest assistant message has non-empty content
                     const hasNewAssistantMessages = currentAssistantCount > initialAssistantCount;
+                    const latestAssistantMessage = assistantMessages[assistantMessages.length - 1];
+                    const hasContent = latestAssistantMessage &&
+                        (latestAssistantMessage.content?.trim() || latestAssistantMessage.contentHtml?.trim());
 
-                    if (hasNewAssistantMessages) {
-                        console.log('[Chat] New assistant message detected! Stopping polling.');
+                    if (hasNewAssistantMessages && hasContent) {
+                        console.log('[Chat] New assistant message with content detected! Stopping polling.');
                         update(state => ({ ...state, generating: false }));
                         if (pollInterval) {
                             clearInterval(pollInterval);
