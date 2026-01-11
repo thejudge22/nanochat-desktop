@@ -30,8 +30,8 @@ const initialState: ChatState = {
 function createChatStore() {
     const { subscribe, set, update } = writable<ChatState>(initialState);
 
-    // Polling interval reference
-    let pollInterval: ReturnType<typeof setInterval> | null = null;
+    // Polling reference
+    let pollTimeout: ReturnType<typeof setTimeout> | null = null;
 
     return {
         subscribe,
@@ -49,9 +49,9 @@ function createChatStore() {
             }
 
             // Clear any existing polling
-            if (pollInterval) {
-                clearInterval(pollInterval);
-                pollInterval = null;
+            if (pollTimeout) {
+                clearTimeout(pollTimeout);
+                pollTimeout = null;
             }
 
             update(state => ({
@@ -98,9 +98,9 @@ function createChatStore() {
             let conversationId = state.conversationId;
 
             // Clear any existing polling
-            if (pollInterval) {
-                clearInterval(pollInterval);
-                pollInterval = null;
+            if (pollTimeout) {
+                clearTimeout(pollTimeout);
+                pollTimeout = null;
             }
 
             update(state => ({
@@ -168,16 +168,15 @@ function createChatStore() {
         },
 
         startPolling(conversationId: string) {
-            // Clear any existing interval
-            if (pollInterval) {
-                clearInterval(pollInterval);
+            // Clear any existing polling
+            if (pollTimeout) {
+                clearTimeout(pollTimeout);
             }
 
             let pollCount = 0;
             const maxPolls = 180; // Maximum 90 seconds of polling (180 * 500ms)
 
-            // Poll every 500ms
-            pollInterval = setInterval(async () => {
+            const poll = async () => {
                 pollCount++;
 
                 try {
@@ -214,11 +213,7 @@ function createChatStore() {
                         }
 
                         update(state => ({ ...state, generating: false, initializing: false }));
-
-                        if (pollInterval) {
-                            clearInterval(pollInterval);
-                            pollInterval = null;
-                        }
+                        pollTimeout = null;
 
                         // Ensure conversation list is updated with the final state
                         await conversationsStore.loadConversations();
@@ -232,13 +227,21 @@ function createChatStore() {
                     console.error('[Chat] Polling error:', error);
                     // Don't stop polling on transient errors, but log them
                 }
-            }, 500);
+
+                // Schedule the next poll only after the current request has completed
+                if (pollTimeout !== null) {
+                    pollTimeout = setTimeout(poll, 500);
+                }
+            };
+
+            // Start the first poll
+            pollTimeout = setTimeout(poll, 500);
         },
 
         stopPolling() {
-            if (pollInterval) {
-                clearInterval(pollInterval);
-                pollInterval = null;
+            if (pollTimeout) {
+                clearTimeout(pollTimeout);
+                pollTimeout = null;
             }
             update(state => ({ ...state, generating: false }));
         },
@@ -252,9 +255,9 @@ function createChatStore() {
         },
 
         reset() {
-            if (pollInterval) {
-                clearInterval(pollInterval);
-                pollInterval = null;
+            if (pollTimeout) {
+                clearTimeout(pollTimeout);
+                pollTimeout = null;
             }
             set(initialState);
         },
