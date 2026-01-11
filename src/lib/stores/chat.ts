@@ -75,6 +75,7 @@ function createChatStore() {
 
             try {
                 const messages = await messagesApi.getMessages(conversationId);
+                
                 update(state => ({
                     ...state,
                     conversationId,
@@ -112,15 +113,12 @@ function createChatStore() {
                 // If no conversation exists, use generateMessage to create everything in one call
                 // The generate-message endpoint handles: conversation creation, user message, AI response, and title generation
                 if (!conversationId) {
-                    console.log('[Chat] No conversation - using generateMessage to create new conversation');
-
                     // generateMessage with no conversation_id will create a new conversation
                     const result = await messagesApi.generateMessage({
                         message: content,
                         model_id: modelId,
                     });
 
-                    console.log('[Chat] generateMessage response:', JSON.stringify(result, null, 2));
                     conversationId = result.conversation_id;
 
                     // Set initializing flag BEFORE setting conversationId to prevent reactive reload
@@ -149,7 +147,7 @@ function createChatStore() {
                     this.startPolling(conversationId);
                 } else {
                     // Generate AI response (this creates the user message on the server)
-                    await messagesApi.generateMessage({
+                    const result = await messagesApi.generateMessage({
                         message: content,
                         model_id: modelId,
                         conversation_id: conversationId,
@@ -175,8 +173,6 @@ function createChatStore() {
                 clearInterval(pollInterval);
             }
 
-            console.log('[Chat] Starting polling for conversation:', conversationId);
-
             let pollCount = 0;
             const maxPolls = 180; // Maximum 90 seconds of polling (180 * 500ms)
 
@@ -188,23 +184,12 @@ function createChatStore() {
                     // Fetch both messages and conversation state in parallel
                     const [messages, conversation] = await Promise.all([
                         messagesApi.getMessages(conversationId),
-                        conversationsApi.getConversation(conversationId).catch(err => {
-                            console.warn('[Chat] Conversation not yet available, will retry:', err.message);
-                            return null;  // Return null if conversation fetch fails
-                        })
+                        conversationsApi.getConversation(conversationId)
                     ]);
 
                     const assistantMessages = messages.filter(m => m.role === 'assistant');
                     const lastAssistantMessage = assistantMessages[assistantMessages.length - 1];
                     const hasContent = lastAssistantMessage && (lastAssistantMessage.content || lastAssistantMessage.contentHtml);
-
-                    console.log(`[Chat] Poll #${pollCount}: Total ${messages.length}, Assistant ${assistantMessages.length}, Generating: ${conversation?.generating ?? 'unknown'}, Title: "${conversation?.title ?? 'New Chat'}"`);
-                    console.log(`[Chat] Last assistant message:`, lastAssistantMessage ? {
-                        id: lastAssistantMessage.id,
-                        hasContent: !!lastAssistantMessage.content,
-                        hasHtml: !!lastAssistantMessage.contentHtml,
-                        contentLength: lastAssistantMessage.content?.length || 0
-                    } : 'None');
 
                     // Update chat state with latest messages
                     update(state => ({
@@ -213,26 +198,19 @@ function createChatStore() {
                     }));
 
                     // Update the sidebar with the latest conversation metadata (title, generating status)
-                    // Only update if we successfully fetched the conversation
-                    if (conversation) {
-                        conversationsStore.updateConversation(conversation);
-                    }
+                    conversationsStore.updateConversation(conversation);
+
+                    // Stop polling when server says generation is complete AND we have message content
+                    const serverFinished = !conversation.generating && hasContent;
 
                     // Stop polling conditions:
-                    // 1. Server explicitly says generation is complete
-                    // 2. Last assistant message has content (message is done streaming)
-                    // 3. Max polls reached (safety timeout)
-                    const shouldStop = (conversation && !conversation.generating) ||
-                                      hasContent ||
-                                      pollCount >= maxPolls;
+                    // 1. Server says generation is complete AND we have message content
+                    // 2. Max polls reached (safety timeout)
+                    const shouldStop = serverFinished || pollCount >= maxPolls;
 
                     if (shouldStop) {
                         if (pollCount >= maxPolls) {
                             console.warn('[Chat] Stopping polling - max attempts reached');
-                        } else if (conversation && !conversation.generating) {
-                            console.log('[Chat] Server finished generation (generating=false). Stopping polling.');
-                        } else if (hasContent) {
-                            console.log('[Chat] Assistant message with content detected. Stopping polling.');
                         }
 
                         update(state => ({ ...state, generating: false, initializing: false }));
@@ -242,8 +220,12 @@ function createChatStore() {
                             pollInterval = null;
                         }
 
-                        // Final refresh of the whole list just to be safe and ensure everything is consistent
-                        conversationsStore.loadConversations();
+                        // Ensure conversation list is updated with the final state
+                        await conversationsStore.loadConversations();
+                        
+                        // Update with the latest conversation data
+                        conversationsStore.updateConversation(conversation);
+                        
                         return;
                     }
                 } catch (error) {

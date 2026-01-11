@@ -29,6 +29,7 @@ function createConversationsStore() {
 
             try {
                 const conversations = await conversationsApi.getConversations();
+                
                 update(state => ({
                     ...state,
                     conversations,

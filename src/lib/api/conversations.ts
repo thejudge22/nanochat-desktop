@@ -19,13 +19,18 @@ export async function getConversations(
 }
 
 export async function getConversation(id: string): Promise<Conversation> {
-    const list = await apiRequest<Conversation[]>(`/api/db/conversations?id=${id}&t=${Date.now()}`);
-
-    if (!list || list.length === 0 || !list[0]) {
+    const response = await apiRequest<Conversation | Conversation[]>(
+        `/api/db/conversations?id=${id}&t=${Date.now()}`
+    );
+    
+    // Handle both array response and single object response
+    const conversation = Array.isArray(response) ? response[0] : response;
+    
+    if (!conversation || !conversation.id) {
         throw new Error(`Conversation not found: ${id}`);
     }
-
-    return list[0];
+    
+    return conversation;
 }
 
 export async function deleteConversation(id: string): Promise<void> {
