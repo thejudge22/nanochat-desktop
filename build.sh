@@ -2,10 +2,14 @@
 # Helper script to build Tauri application with correct environment variables
 #
 # Usage:
-#   ./build.sh                    # Build all bundle types
+#   ./build.sh                    # Build all bundle types (deb, rpm, appimage)
 #   ./build.sh --bundles appimage # Build AppImage only
-#   ./build.sh --bundles flatpak  # Build Flatpak only
 #   ./build.sh --bundles deb      # Build deb only
+#
+# Flatpak builds:
+#   Flatpak is NOT supported directly by Tauri's bundle system.
+#   To build Flatpak, use flatpak-builder directly:
+#   flatpak-builder --user --install --force-clean build-flatpak org.nanochat.desktop.json
 #
 # This script sets environment variables needed to work around issues on:
 # - Fedora 42+ and other modern Linux distributions
