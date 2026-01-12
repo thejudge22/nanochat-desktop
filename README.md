@@ -2,6 +2,7 @@
 
 A sleek desktop chat application built with Tauri, Svelte, and TypeScript. It provides a native desktop interface for interacting with NanoChat services.
 
+Currently Linux desktop releases are provided.  Mac/Windows possibly in the future.
 ## Tech Stack
 
 - **Framework**: [Tauri](https://tauri.app/)
