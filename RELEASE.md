@@ -71,9 +71,3 @@ Released on: [YYYY-MM-DD]
 - **AppImage**: Download the `.AppImage` file, make it executable (`chmod +x ...`), and run it.
 - **Debian/Ubuntu**: Install using `sudo dpkg -i [filename].deb`.
 - **Fedora/RHEL**: Install using `sudo rpm -i [filename].rpm`.
-
-### Flatpak (Manual Build)
-If you prefer Flatpak, you can build it locally using:
-```bash
-flatpak-builder --user --install --force-clean build-flatpak org.nanochat.desktop.json
-```

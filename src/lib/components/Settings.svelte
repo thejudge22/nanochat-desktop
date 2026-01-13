@@ -1,6 +1,7 @@
 <script lang="ts">
   import { getConfig, saveConfig, validateConnection, type Config } from "../stores/config";
   import { onMount } from "svelte";
+  import { assistants, loadAssistants } from "../stores/assistants";
 
   let serverUrl = "";
   let apiKey = "";
@@ -20,6 +21,7 @@
     } catch (err) {
       console.error("Failed to load config:", err);
     }
+    await loadAssistants();
   });
 
   async function handleSave() {
@@ -139,6 +141,24 @@
         </p>
       {/if}
     </form>
+
+    <h2>Assistants</h2>
+    <div class="assistants-section">
+      <p class="server-managed-note">Server-managed assistants</p>
+      {#each $assistants as assistant}
+        <div class="assistant-item">
+          <div class="assistant-info">
+            <div class="assistant-name">
+              {assistant.name}
+              {#if assistant.isDefault}
+                <span class="default-badge">(Default)</span>
+              {/if}
+            </div>
+            <div class="assistant-description">{assistant.description || 'No description'}</div>
+          </div>
+        </div>
+      {/each}
+    </div>
 
     {#if !isFirstRun && onClose}
       <button class="close-button" on:click={onClose}>×</button>
@@ -325,6 +345,53 @@
 
   .close-button:hover {
     color: var(--color-text);
+  }
+
+  .assistants-section {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .assistant-item {
+    padding: 1rem;
+    background: var(--color-bg-hover);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    margin-bottom: 0.75rem;
+  }
+
+  .assistant-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .assistant-name {
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: 0.25rem;
+  }
+
+  .assistant-description {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .default-badge {
+    font-size: 0.75rem;
+    color: var(--color-accent);
+    font-weight: 500;
+    margin-left: 0.5rem;
+  }
+
+  .server-managed-note {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+    margin-bottom: 1rem;
+    font-style: italic;
   }
 
   @media (max-width: 480px) {

@@ -4,6 +4,7 @@ import * as messagesApi from '../api/messages';
 import * as conversationsApi from '../api/conversations';
 import { conversationsStore } from './conversations';
 import { get } from 'svelte/store';
+import { selectedAssistantId } from './assistants';
 
 // Callback type for when a new conversation is created
 export type NewConversationCallback = (conversationId: string) => void;
@@ -96,6 +97,7 @@ function createChatStore() {
         async sendMessage(content: string, modelId: string) {
             const state = get({ subscribe });
             let conversationId = state.conversationId;
+            const assistantId = get(selectedAssistantId) ?? undefined;
 
             // Clear any existing polling
             if (pollTimeout) {
@@ -117,6 +119,7 @@ function createChatStore() {
                     const result = await messagesApi.generateMessage({
                         message: content,
                         model_id: modelId,
+                        assistant_id: assistantId,
                     });
 
                     conversationId = result.conversation_id;
@@ -151,6 +154,7 @@ function createChatStore() {
                         message: content,
                         model_id: modelId,
                         conversation_id: conversationId,
+                        assistant_id: assistantId,
                     });
 
                     // Start polling for AI response

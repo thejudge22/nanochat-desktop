@@ -6,6 +6,7 @@
   import { getConfig } from "./lib/stores/config";
   import { conversationsStore, selectedConversation } from "./lib/stores/conversations";
   import { chatStore } from "./lib/stores/chat";
+  import { loadAssistants } from "./lib/stores/assistants";
 
   let configLoaded = false;
   let showSettings = false;
@@ -51,6 +52,9 @@
       } else {
         console.log('[App] Config valid, showing main app');
         isFirstRun = false;
+        
+        // Load assistants after config is validated
+        await loadAssistants();
       }
       
       configLoaded = true;

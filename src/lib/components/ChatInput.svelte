@@ -2,6 +2,8 @@
   import { createEventDispatcher } from 'svelte';
   import { chatStore } from '../stores/chat';
   import { modelsStore, selectedModel } from '../stores/models';
+  import ModelSelector from './ModelSelector.svelte';
+  import AssistantSelector from './AssistantSelector.svelte';
 
   export let disabled = false;
   export let placeholder = 'Type a message...';
@@ -84,13 +86,22 @@
     </button>
   </div>
   <div class="input-footer">
-    <span class="hint">Press Ctrl+Enter to send</span>
-    {#if $chatStore.generating}
-      <span class="generating-status">
-        <span class="spinner-small"></span>
-        Generating response...
-      </span>
-    {/if}
+    <div class="footer-left">
+      <span class="hint">Press Ctrl+Enter to send</span>
+    </div>
+    <div class="footer-right">
+      {#if $chatStore.generating}
+        <span class="generating-status">
+          <span class="spinner-small"></span>
+          Generating response...
+        </span>
+      {:else}
+        <div class="selectors">
+          <ModelSelector />
+          <AssistantSelector />
+        </div>
+      {/if}
+    </div>
   </div>
 </div>
 
@@ -196,6 +207,24 @@
     justify-content: space-between;
     align-items: center;
     margin-top: 0.5rem;
+    gap: 1rem;
+  }
+
+  .footer-left {
+    display: flex;
+    align-items: center;
+  }
+
+  .footer-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .selectors {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .hint {

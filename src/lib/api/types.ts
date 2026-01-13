@@ -82,16 +82,16 @@ export interface ModelProvider {
 }
 
 export interface Assistant {
-    id: string;
-    name: string;
-    description: string | null;
-    systemPrompt: string;
-    isDefault: boolean;
-    defaultModelId: string | null;
-    defaultWebSearchMode: WebSearchMode | null;
-    defaultWebSearchProvider: WebSearchProvider | null;
-    createdAt: string;
-    updatedAt: string;
+    readonly id: string;
+    readonly name: string;
+    readonly description: string | null;
+    readonly systemPrompt: string;
+    readonly isDefault: boolean;
+    readonly defaultModelId: string | null;
+    readonly defaultWebSearchMode: WebSearchMode | null;
+    readonly defaultWebSearchProvider: WebSearchProvider | null;
+    readonly createdAt: string;
+    readonly updatedAt: string;
 }
 
 export interface Project {

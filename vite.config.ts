@@ -20,6 +20,9 @@ export default defineConfig({
                 port: 1430,
             }
             : undefined,
+        watch: {
+            ignored: ['**/builddir/**', '**/.flatpak-builder/**']
+        }
     },
     envPrefix: ["VITE_", "TAURI_"],
     build: {

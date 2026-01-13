@@ -15,10 +15,6 @@ build/
 src-tauri/target/
 src-tauri/Cargo.lock
 
-# Flatpak builder
-.flatpak-builder/
-builddir/
-
 # IDE files
 .vscode/
 .idea/
