@@ -6,6 +6,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 NanoChat Desktop is a cross-platform desktop client for the NanoChat AI chat service, built with Tauri 2.x. It combines a Rust backend with a Svelte 5 frontend to create a native desktop application.
 
+## GitHub CLI Integration
+
+The project uses GitHub CLI (`gh`) for streamlined workflows. See [`GH_CLI.md`](GH_CLI.md) for complete documentation.
+
+**Branch-based versioning**: When creating releases, use branch names like `v03`, `v12`, etc. The release script will automatically:
+- Convert `v03` → version `0.3.0`
+- Convert `v12` → version `1.2.0`
+- Update `package.json` and `src-tauri/tauri.conf.json`
+- Create git tag `v0.3.0` or `v1.2.0`
+
+Quick commands:
+- `npm run release` - Create draft release (auto-detects version from branch)
+- `npm run pr` - Create pull request
+- `npm run issues` - List issues
+
 ## Development Commands
 
 ### Frontend Development

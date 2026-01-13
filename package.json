@@ -11,7 +11,17 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "tauri:build:appimage": "APPIMAGE_EXTRACT_AND_RUN=1 NO_STRIP=1 tauri build --bundles appimage"
+    "tauri:build:appimage": "APPIMAGE_EXTRACT_AND_RUN=1 NO_STRIP=1 tauri build --bundles appimage",
+    "git:push": "git push origin $(git rev-parse --abbrev-ref HEAD)",
+    "git:push:tags": "git push origin --tags",
+    "pr": "gh pr create --fill",
+    "pr:view": "gh pr view --web",
+    "release": "bash scripts/release.sh",
+    "release:publish": "bash scripts/release.sh --publish",
+    "release:view": "gh release view --web",
+    "issues": "gh issue list",
+    "issue:create": "gh issue create",
+    "issue:view": "gh issue view"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
